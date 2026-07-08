@@ -1,28 +1,18 @@
 import React from 'react';
-import { View, Text, StyleSheet, Linking, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
+import DocumentViewer, { getFileType } from '../screens/DocumentViewer';
 
 export default function PDFViewer() {
   const params = useLocalSearchParams();
   const url = params.url as string;
-  const title = params.title as string || 'PDF Document';
-
-  console.log('PDF Viewer - URL:', url);
-  console.log('PDF Viewer - Title:', title);
-
-  const openInBrowser = async () => {
-    try {
-      await Linking.openURL(url);
-    } catch (error) {
-      alert('Cannot open this PDF');
-    }
-  };
+  const title = params.title as string || 'Document';
 
   if (!url) {
     return (
       <View style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorTitle}>No PDF URL</Text>
+          <Text style={styles.errorTitle}>No Document URL</Text>
           <Text>URL parameter is missing</Text>
           <TouchableOpacity style={styles.button} onPress={() => router.back()}>
             <Text style={styles.buttonText}>Go Back</Text>
@@ -34,32 +24,27 @@ export default function PDFViewer() {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Text style={styles.backText}>← Back</Text>
+        </TouchableOpacity>
+        <Text style={styles.title} numberOfLines={1}>{title}</Text>
+        <View style={styles.placeholder} />
+      </View>
+
+      {/* Document Viewer */}
       {Platform.OS === 'web' ? (
-        // Web: Show PDF in iframe
-        <>
-          <View style={styles.header}>
-            <Text style={styles.title}>{title}</Text>
-          </View>
-          <iframe 
-            src={url} 
-            style={styles.iframe}
-            title="PDF Viewer"
-          />
-        </>
+        <iframe
+          src={url}
+          style={styles.iframe}
+          title={title}
+        />
       ) : (
-        // Native: Show open button
-        <View style={styles.nativeContainer}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.url}>{url}</Text>
-          
-          <TouchableOpacity style={styles.primaryButton} onPress={openInBrowser}>
-            <Text style={styles.primaryButtonText}>Open PDF</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.secondaryButton} onPress={() => router.back()}>
-            <Text style={styles.secondaryButtonText}>Go Back</Text>
-          </TouchableOpacity>
-        </View>
+        <DocumentViewer
+          uri={url}
+          fileType={getFileType(url)}
+        />
       )}
     </View>
   );
@@ -71,60 +56,34 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 15,
-    backgroundColor: '#f8f9fa',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
+    backgroundColor: '#0B0B44',
+    paddingTop: 50,
+  },
+  backButton: {
+    padding: 5,
+  },
+  backText: {
+    color: '#fff',
+    fontSize: 16,
   },
   title: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#0B0B44',
+    color: '#fff',
+    flex: 1,
     textAlign: 'center',
+    marginHorizontal: 10,
+  },
+  placeholder: {
+    width: 50,
   },
   iframe: {
     width: '100%',
     height: '100%',
-
-  },
-  nativeContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 30,
-  },
-  url: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  primaryButton: {
-    backgroundColor: '#0B0B44',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    minWidth: 200,
-  },
-  primaryButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  secondaryButton: {
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#0B0B44',
-    minWidth: 200,
-  },
-  secondaryButtonText: {
-    color: '#0B0B44',
-    fontSize: 16,
-    textAlign: 'center',
   },
   errorContainer: {
     flex: 1,
