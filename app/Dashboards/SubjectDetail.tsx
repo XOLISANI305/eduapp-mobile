@@ -106,8 +106,14 @@ export default function SubjectDetail() {
           break;
 
         case 'video':
-          Alert.alert('Info', 'Video player not implemented yet');
-          break;
+  router.push({
+    pathname: '/screens/pdf-viewer',
+    params: {
+      url: filePath,
+      title: filename
+    }
+  });
+  break;
 
         case 'image':
         case 'audio':
@@ -128,32 +134,40 @@ export default function SubjectDetail() {
   // ─── Resource press ──────────────────────────────────────────────────────────
 
   const handleResourcePress = async (resource: any) => {
-    try {
-      const filename = resource.title || `resource_${resource.id}`;
-      const fileType = resource.type || getFileType(filename);
+  try {
+    const filename = resource.title || `resource_${resource.id}`;
+    const fileType = resource.type || getFileType(filename);
 
-      let fileUrl = resource.url;
-      if (!fileUrl && resource.file_path) {
+    let fileUrl = resource.url;
+
+    if (!fileUrl && resource.file_path) {
+      const isFullUrl = /^https?:\/\//i.test(resource.file_path);
+
+      if (isFullUrl) {
+        // file_path is already a complete URL (e.g. Cloudinary) — use as-is
+        fileUrl = resource.file_path;
+      } else {
+        // file_path is a relative path on your own server — build the full URL
         const clean = resource.file_path.replace(/\\/g, '/').replace('uploads/', '');
         fileUrl = `http://10.3.22.56:5000/uploads/${clean}`;
       }
-
-      if (!fileUrl) {
-        Alert.alert('Error', 'No file URL available for this resource');
-        return;
-      }
-
-      if (fileType === 'pdf') {
-        router.push({ pathname: '/screens/pdf-viewer', params: { url: fileUrl, title: resource.title } });
-      } else {
-        openFileWithViewer(fileUrl, filename, fileType);
-      }
-    } catch (err) {
-      console.error('Error opening resource:', err);
-      Alert.alert('Error', 'Failed to open resource');
     }
-  };
 
+    if (!fileUrl) {
+      Alert.alert('Error', 'No file URL available for this resource');
+      return;
+    }
+
+    if (fileType === 'pdf') {
+      router.push({ pathname: '/screens/pdf-viewer', params: { url: fileUrl, title: resource.title } });
+    } else {
+      openFileWithViewer(fileUrl, filename, fileType);
+    }
+  } catch (err) {
+    console.error('Error opening resource:', err);
+    Alert.alert('Error', 'Failed to open resource');
+  }
+};
   // ─── Data loading ────────────────────────────────────────────────────────────
 
   const loadSubjectDetails = async () => {

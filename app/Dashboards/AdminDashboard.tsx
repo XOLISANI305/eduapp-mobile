@@ -169,9 +169,7 @@ export default function AdminDashboard() {
       const filename = resource.title || `resource_${resource.id}`;
       const fileType = resource.type || getFileType(filename);
       
-      const cleanFilePath = resource.file_path.replace(/\\/g, '/').replace('uploads/', '');
-      const fileUrl = `https://eduapp-backend-1.onrender.com/uploads/${cleanFilePath}`;
-      
+      const fileUrl = resource.file_path;
       console.log('🔍 Checking file:', fileUrl);
 
       const fileExists = await checkFileExists(fileUrl);
@@ -249,8 +247,14 @@ export default function AdminDashboard() {
           break;
           
         case 'video':
-          Alert.alert("Info", "Video player not implemented yet");
-          break;
+  router.push({
+    pathname: '/screens/pdf-viewer',
+    params: {
+      url: filePath,
+      title: filename
+    }
+  });
+  break;
           
         case 'image':
           try {
@@ -704,11 +708,26 @@ export default function AdminDashboard() {
       }
       
     } catch (error: any) {
-      Alert.alert("Error", getErrorMessage(error));
-      return false;
-    } finally {
-      setUploading(false);
-    }
+  console.log("========== UPLOAD ERROR ==========");
+  console.log("Message:", error.message);
+  console.log("Code:", error.code);
+  console.log("Response:", error.response);
+  console.log("Request:", error.request);
+
+  if (error.response) {
+    console.log("Status:", error.response.status);
+    console.log("Data:", error.response.data);
+  }
+
+  Alert.alert(
+    "Upload Error",
+    error.response
+      ? JSON.stringify(error.response.data)
+      : error.message
+  );
+
+  return false;
+}
   };
 
 

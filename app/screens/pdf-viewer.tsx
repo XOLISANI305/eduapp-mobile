@@ -6,15 +6,22 @@ import DocumentViewer, { getFileType } from '../screens/DocumentViewer';
 export default function PDFViewer() {
   const params = useLocalSearchParams();
   const url = params.url as string;
-  const title = params.title as string || 'Document';
+  const title = (params.title as string) || "Document";
+
+  console.log("========== PDF VIEWER ==========");
+  console.log("PDF URL:", url);
+  console.log("Title:", title);
 
   if (!url) {
     return (
       <View style={styles.container}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorTitle}>No Document URL</Text>
-          <Text>URL parameter is missing</Text>
-          <TouchableOpacity style={styles.button} onPress={() => router.back()}>
+          <Text style={styles.errorText}>URL parameter is missing</Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.back()}
+          >
             <Text style={styles.buttonText}>Go Back</Text>
           </TouchableOpacity>
         </View>
@@ -24,17 +31,7 @@ export default function PDFViewer() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.title} numberOfLines={1}>{title}</Text>
-        <View style={styles.placeholder} />
-      </View>
-
-      {/* Document Viewer */}
-      {Platform.OS === 'web' ? (
+      {Platform.OS === "web" ? (
         <iframe
           src={url}
           style={styles.iframe}
@@ -53,37 +50,12 @@ export default function PDFViewer() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 15,
-    backgroundColor: '#0B0B44',
-    paddingTop: 50,
-  },
-  backButton: {
-    padding: 5,
-  },
-  backText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-    flex: 1,
-    textAlign: 'center',
-    marginHorizontal: 10,
-  },
-  placeholder: {
-    width: 50,
+    backgroundColor: '#000',
   },
   iframe: {
     width: '100%',
     height: '100%',
+
   },
   errorContainer: {
     flex: 1,
@@ -96,6 +68,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'red',
     marginBottom: 10,
+  },
+  errorText: {
+    color: '#333',
   },
   button: {
     backgroundColor: '#0B0B44',

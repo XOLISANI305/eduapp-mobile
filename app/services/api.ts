@@ -267,11 +267,14 @@ export type Resource = {
   created_at?: string;
 };
 
-export const createResource = async (formData: FormData, config?: any): Promise<Resource> => {
-  const res = await api.post<Resource>('/resources', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-    ...config,
+export const createResource = async (formData: FormData): Promise<Resource> => {
+  const res = await api.post("/resources", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    transformRequest: (data) => data,
   });
+
   return res.data;
 };
 
@@ -283,6 +286,8 @@ export const deleteResource = async (resourceId: string) => {
     throw err.response?.data || err.message;
   }
 };
+
+
 
 export const updateAssessment = async (id: string, title: string) => {
   const response = await fetch(`${API_URL}/assessments/${id}`, {
@@ -778,14 +783,21 @@ export const loginUser = async (email: string, password: string): Promise<AuthRe
       const backendMessage = error.response.data?.message || error.response.data?.error;
 
       switch (status) {
-        case 400:
-        case 401:
-          // Friendly message for wrong credentials
-          throw new Error(
-            backendMessage?.toLowerCase().includes("invalid") || backendMessage?.toLowerCase().includes("credentials")
-              ? "Incorrect email or password"
-              : backendMessage || "Incorrect email or password"
-          );
+       case 400:
+case 401:
+  // Check for OAuth account trying password login
+  if (backendMessage?.toLowerCase().includes('google') ||
+      backendMessage?.toLowerCase().includes('facebook') ||
+      backendMessage?.toLowerCase().includes('please login using')) {
+    throw new Error(backendMessage);
+  }
+  // Wrong credentials
+  throw new Error(
+    backendMessage?.toLowerCase().includes("invalid") || 
+    backendMessage?.toLowerCase().includes("credentials")
+      ? "Incorrect email or password"
+      : backendMessage || "Incorrect email or password"
+  );
         case 422:
           throw new Error(backendMessage || "Please check your email format");
         case 429:
