@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
   RefreshControl,
+  Platform,
 } from 'react-native';
 
 import {
@@ -122,39 +123,51 @@ export default function StudentAssessment() {
   };
 
   const handleSubmit = () => {
-    console.log('🎯 Web-compatible handleSubmit');
-    
-    if (hasSubmitted) {
+  console.log('🎯 handleSubmit');
+
+  if (hasSubmitted) {
+    if (Platform.OS === 'web') {
       window.alert('You have already submitted this assessment');
-      return;
-    }
-
-    const answered = getAnsweredCount();
-    const total = getTotalQuestions();
-
-    if (answered < total) {
-      const shouldSubmit = window.confirm(
-        `You have answered ${answered} out of ${total} questions. Are you sure you want to submit?`
-      );
-      if (shouldSubmit) {
-        console.log('✅ User confirmed submission (incomplete)');
-        confirmSubmit();
-      } else {
-        console.log('❌ User cancelled submission (incomplete)');
-      }
     } else {
-      const shouldSubmit = window.confirm(
-        'Are you sure you want to submit your answers? You cannot change them after submission.'
-      );
-      if (shouldSubmit) {
-        console.log('✅ User confirmed submission (complete)');
-        confirmSubmit();
-      } else {
-        console.log('❌ User cancelled submission (complete)');
-      }
+      Alert.alert('Info', 'You have already submitted this assessment');
     }
-  };
+    return;
+  }
 
+  const answered = getAnsweredCount();
+  const total = getTotalQuestions();
+
+  const message =
+    answered < total
+      ? `You have answered ${answered} out of ${total} questions. Are you sure you want to submit?`
+      : 'Are you sure you want to submit your answers? You cannot change them after submission.';
+
+  if (Platform.OS === 'web') {
+    // window.confirm only exists in an actual browser/webview
+    const shouldSubmit =
+      typeof window !== 'undefined' && typeof window.confirm === 'function'
+        ? window.confirm(message)
+        : true; // fallback: if confirm isn't available, just proceed
+
+    if (shouldSubmit) {
+      console.log('✅ User confirmed submission');
+      confirmSubmit();
+    } else {
+      console.log('❌ User cancelled submission');
+    }
+  } else {
+    Alert.alert('Confirm Submission', message, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Submit',
+        onPress: () => {
+          console.log('✅ User confirmed submission');
+          confirmSubmit();
+        },
+      },
+    ]);
+  }
+};
   const confirmSubmit = async () => {
     try {
       console.log('📤 Starting submission...');

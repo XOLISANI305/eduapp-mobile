@@ -11,6 +11,7 @@ import {
   TextInput,
   Modal,
   RefreshControl,
+  
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { MaterialIcons, Feather } from "@expo/vector-icons";
@@ -18,6 +19,7 @@ import {
   getAssessment,
   addQuestion,
   addOption,
+  updateOption,
   deleteQuestion,
   deleteOption,
   getErrorMessage,
@@ -118,30 +120,50 @@ export default function AssessmentBuilder() {
   };
 
   const handleAddOption = async () => {
-    if (!optionText.trim()) {
-      Alert.alert("Error", "Please enter an option");
-      return;
+  if (!optionText.trim()) {
+    Alert.alert("Error", "Please enter an option");
+    return;
+  }
+
+  if (!currentQuestionId) {
+    Alert.alert("Error", "No question selected");
+    return;
+  }
+
+  try {
+    setAdding("option");
+
+    // If this new option is marked correct, unset any existing
+    // correct option(s) on the same question first so there's
+    // only ever one correct answer per question.
+    if (isCorrect) {
+      const question = assessment?.questions.find(
+        (q) => q.id === currentQuestionId
+      );
+      const previouslyCorrect = question?.options?.filter(
+        (o) => o.is_correct
+      );
+
+      if (previouslyCorrect && previouslyCorrect.length > 0) {
+        await Promise.all(
+          previouslyCorrect.map((o) =>
+            updateOption(o.id, { is_correct: false })
+          )
+        );
+      }
     }
 
-    if (!currentQuestionId) {
-      Alert.alert("Error", "No question selected");
-      return;
-    }
-
-    try {
-      setAdding("option");
-      await addOption(assessmentId, currentQuestionId, optionText, isCorrect);
-      Alert.alert("Success", "Option added successfully!");
-      setOptionModalVisible(false);
-      setOptionText("");
-      setIsCorrect(false);
-      await loadAssessment();
-    } catch (error) {
-      Alert.alert("Error", getErrorMessage(error));
-    } finally {
-      setAdding(null);
-    }
-  };
+    await addOption(assessmentId, currentQuestionId, optionText.trim(), isCorrect);
+    setOptionModalVisible(false);
+    setOptionText("");
+    setIsCorrect(false);
+    await loadAssessment();
+  } catch (error) {
+    Alert.alert("Error", getErrorMessage(error));
+  } finally {
+    setAdding(null);
+  }
+};
 
   const handleDeleteQuestion = async (questionId: string) => {
     Alert.alert(
@@ -208,6 +230,32 @@ export default function AssessmentBuilder() {
       [questionId]: !prev[questionId]
     }));
   };
+
+  const handleToggleCorrect = async (questionId: string, optionId: string) => {
+  const question = assessment?.questions.find((q) => q.id === questionId);
+  if (!question) return;
+
+  try {
+    setAdding(optionId);
+
+    // Unset any other correct option on this question
+    const others = question.options?.filter(
+      (o) => o.is_correct && o.id !== optionId
+    );
+    if (others && others.length > 0) {
+      await Promise.all(
+        others.map((o) => updateOption(o.id, { is_correct: false }))
+      );
+    }
+
+    await updateOption(optionId, { is_correct: true });
+    await loadAssessment();
+  } catch (error) {
+    Alert.alert("Error", getErrorMessage(error));
+  } finally {
+    setAdding(null);
+  }
+};
 
   const getTotalMarks = () => {
     if (!assessment?.questions) return 0;
@@ -358,7 +406,11 @@ export default function AssessmentBuilder() {
                                   option.is_correct && styles.correctOption
                                 ]}
                               >
-                                <View style={styles.optionContent}>
+                                <TouchableOpacity
+                                  style={styles.optionContent}
+                                  onPress={() => handleToggleCorrect(question.id, option.id)}
+                                  disabled={option.is_correct || adding === option.id}
+                                >
                                   <View style={styles.optionLabel}>
                                     <Text style={styles.optionLabelText}>
                                       {String.fromCharCode(65 + optIndex)}
@@ -371,7 +423,7 @@ export default function AssessmentBuilder() {
                                       <Text style={styles.correctBadgeText}>Correct</Text>
                                     </View>
                                   )}
-                                </View>
+                                </TouchableOpacity>
                                 <TouchableOpacity
                                   onPress={() => handleDeleteOption(option.id)}
                                   style={styles.deleteOptionButton}
