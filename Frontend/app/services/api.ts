@@ -250,7 +250,7 @@ export async function updateOption(
   optionId: string,
   updates: { option_text?: string; is_correct?: boolean }
 ) {
-  const response = await fetch(`${API_BASE_URL}/options/${optionId}`, {
+  const response = await fetch(`${API_URL}/options/${optionId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updates),

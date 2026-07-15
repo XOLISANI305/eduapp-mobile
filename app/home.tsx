@@ -461,7 +461,64 @@ const loadHomeData = async () => {
             </View>
           </View>
         </View>
+{/* EduApp Premium */}
+<View style={styles.section}>
+  <Text style={styles.sectionTitle}>EduApp Premium</Text>
 
+  <TouchableOpacity
+    style={[styles.premiumCard, styles.premiumCardElevated]}
+    onPress={() => router.push("./subscription")}
+    activeOpacity={0.9}
+  >
+    <Image
+      source={StudentPortalImg}
+      style={styles.premiumImage}
+      resizeMode="cover"
+    />
+
+    <View style={styles.premiumOverlay}>
+      <LinearGradient
+        colors={["rgba(102,126,234,0.92)", "rgba(118,75,162,0.92)"]}
+        style={styles.premiumGradient}
+      >
+        <View style={styles.premiumContent}>
+
+          <View style={styles.premiumBadge}>
+            <Text style={styles.premiumBadgeText}>
+              PREMIUM
+            </Text>
+          </View>
+
+          <Text style={styles.premiumTitle}>
+            Learn Without Limits
+          </Text>
+
+          <Text style={styles.premiumDescription}>
+            Unlock unlimited subjects, downloads,
+            quizzes and premium learning features.
+          </Text>
+
+          <TouchableOpacity
+            style={styles.premiumButton}
+            onPress={() => router.push("./subscription")}
+          >
+            <Text style={styles.premiumButtonText}>
+              View Plans
+            </Text>
+
+            <Ionicons
+              name="arrow-forward"
+              size={18}
+              color="#fff"
+            />
+
+          </TouchableOpacity>
+
+        </View>
+      </LinearGradient>
+    </View>
+  </TouchableOpacity>
+</View>
         {/* Quick Access Features */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>

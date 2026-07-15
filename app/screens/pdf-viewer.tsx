@@ -7,10 +7,7 @@ export default function PDFViewer() {
   const params = useLocalSearchParams();
   const url = params.url as string;
   const title = (params.title as string) || "Document";
-
-  console.log("========== PDF VIEWER ==========");
-  console.log("PDF URL:", url);
-  console.log("Title:", title);
+  const type = params.type as string | undefined;
 
   if (!url) {
     return (
@@ -29,6 +26,11 @@ export default function PDFViewer() {
     );
   }
 
+  const resolvedType =
+    type === "pdf" || type === "image" || type === "video" || type === "word" || type === "excel"
+      ? type
+      : getFileType(url);
+
   return (
     <View style={styles.container}>
       {Platform.OS === "web" ? (
@@ -40,7 +42,7 @@ export default function PDFViewer() {
       ) : (
         <DocumentViewer
           uri={url}
-          fileType={getFileType(url)}
+          fileType={resolvedType}
         />
       )}
     </View>
@@ -55,7 +57,6 @@ const styles = StyleSheet.create({
   iframe: {
     width: '100%',
     height: '100%',
-
   },
   errorContainer: {
     flex: 1,
