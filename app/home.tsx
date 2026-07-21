@@ -287,7 +287,7 @@ const loadHomeData = async () => {
   const headerGradient: GradientColors = ["#667eea", "#764ba2"];
   const profileGradient: GradientColors = ["#ffffff", "#f8f9fa"];
   const searchGradient: GradientColors = ["#667eea", "#764ba2"];
-  const premiumGradient: GradientColors = ["rgba(102, 126, 234, 0.9)", "rgba(118, 75, 162, 0.9)"];
+  const premiumGradient: GradientColors = ["rgba(149, 167, 245, 0.36)", "rgba(139, 108, 170, 0.29)"];
   const footerGradient: GradientColors = ["#f8f9fa", "#e9ecef"];
 
   const features: Array<{ 
@@ -461,9 +461,35 @@ const loadHomeData = async () => {
             </View>
           </View>
         </View>
-{/* EduApp Premium */}
+
+        {/* Quick Access Features */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Explore Learning Tools</Text>
+            <TouchableOpacity style={styles.seeAllButton} onPress={() => router.push("./screens/LearningTools")}>
+              <Text style={styles.seeAllText}>View All</Text>
+              <Feather name="chevron-right" size={16} color="#667eea" />
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.featuresScroll}>
+            {features.map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => navigateToFeature(item.path as any, item.title)}
+              >
+                <LinearGradient colors={item.gradient} style={[styles.featureCard, styles.featureCardElevated]}>
+                  <View style={styles.featureIconContainer}>
+                    <MaterialIcons name={item.icon} size={24} color="#fff" />
+                  </View>
+                  <Text style={styles.featureText}>{item.title}</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+{/* uThando Lwemfundo Premium */}
 <View style={styles.section}>
-  <Text style={styles.sectionTitle}>EduApp Premium</Text>
+  <Text style={styles.sectionTitle}>uThando Lwemfundo Premium</Text>
 
   <TouchableOpacity
     style={[styles.premiumCard, styles.premiumCardElevated]}
@@ -471,14 +497,14 @@ const loadHomeData = async () => {
     activeOpacity={0.9}
   >
     <Image
-      source={StudentPortalImg}
+      source={require("../assets/images/premium.jpg")}
       style={styles.premiumImage}
       resizeMode="cover"
     />
 
     <View style={styles.premiumOverlay}>
       <LinearGradient
-        colors={["rgba(102,126,234,0.92)", "rgba(118,75,162,0.92)"]}
+        colors={["rgba(149, 167, 245, 0.36)", "rgba(139, 108, 170, 0.29)"]}
         style={styles.premiumGradient}
       >
         <View style={styles.premiumContent}>
@@ -519,32 +545,6 @@ const loadHomeData = async () => {
     </View>
   </TouchableOpacity>
 </View>
-        {/* Quick Access Features */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Explore Learning Tools</Text>
-            <TouchableOpacity style={styles.seeAllButton} onPress={() => router.push("./screens/LearningTools")}>
-              <Text style={styles.seeAllText}>View All</Text>
-              <Feather name="chevron-right" size={16} color="#667eea" />
-            </TouchableOpacity>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.featuresScroll}>
-            {features.map((item, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => navigateToFeature(item.path as any, item.title)}
-              >
-                <LinearGradient colors={item.gradient} style={[styles.featureCard, styles.featureCardElevated]}>
-                  <View style={styles.featureIconContainer}>
-                    <MaterialIcons name={item.icon} size={24} color="#fff" />
-                  </View>
-                  <Text style={styles.featureText}>{item.title}</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
         {/* Featured Schools */}
 <View style={styles.section}>
   
@@ -661,6 +661,7 @@ const loadHomeData = async () => {
   <TouchableOpacity
     style={[styles.universityCard, styles.universityCardElevated]}
     onPress={() => router.push("./screens/UthandoPortalScreen")}
+    activeOpacity={0.9}
   >
     <Image
       source={require("../assets/images/StudentPortal.jpg")}
@@ -1062,6 +1063,7 @@ const styles = StyleSheet.create({
   premiumCard: { 
     borderRadius: 24, 
     overflow: "hidden", 
+    width: "100%",
     height: 200 
   },
   premiumCardElevated: { 
@@ -1090,7 +1092,7 @@ const styles = StyleSheet.create({
     padding: 24 
   },
   premiumBadge: { 
-    backgroundColor: "rgba(255,255,255,0.2)", 
+    backgroundColor: "rgba(255, 255, 255, 0.26)", 
     paddingHorizontal: 8, 
     paddingVertical: 4, 
     borderRadius: 8, 
@@ -1106,13 +1108,19 @@ const styles = StyleSheet.create({
     color: "#fff", 
     fontSize: 20, 
     fontWeight: "bold", 
-    marginBottom: 8 
+    marginBottom: 8,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   premiumDescription: { 
-    color: "rgba(255,255,255,0.9)", 
+    color: "#fff", 
     fontSize: 14, 
     marginBottom: 16, 
-    lineHeight: 20 
+    lineHeight: 20,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   premiumButton: { 
     flexDirection: "row", 
@@ -1165,24 +1173,23 @@ const styles = StyleSheet.create({
     color: "#666" 
   },
 
-  // Universities with Images
+  // uThando Portal card — matched to Premium card sizing (full width, same height)
   universitiesScroll: { 
     marginHorizontal: -24, 
     paddingHorizontal: 24 
   },
   universityCard: { 
-    width: 280, 
-    height: 160, 
-    borderRadius: 16, 
-    overflow: "hidden", 
-    marginRight: 16 
+    width: "100%", 
+    height: 200, 
+    borderRadius: 24, 
+    overflow: "hidden" 
   },
   universityCardElevated: { 
     shadowColor: "#000", 
-    shadowOffset: { width: 0, height: 4 }, 
-    shadowOpacity: 0.1, 
-    shadowRadius: 8, 
-    elevation: 4 
+    shadowOffset: { width: 0, height: 12 }, 
+    shadowOpacity: 0.2, 
+    shadowRadius: 24, 
+    elevation: 12 
   },
   universityImage: { 
     width: "100%", 
@@ -1193,8 +1200,8 @@ const styles = StyleSheet.create({
     bottom: 0, 
     left: 0, 
     right: 0, 
-    padding: 16,
-    paddingTop: 8
+    padding: 24,
+    paddingTop: 40
   },
   universityRank: { 
     backgroundColor: "#667eea", 
@@ -1214,7 +1221,7 @@ const styles = StyleSheet.create({
   universityName: { 
     color: "#fff", 
     fontWeight: "bold", 
-    fontSize: 16, 
+    fontSize: 18, 
     flexShrink: 1 
   },
 

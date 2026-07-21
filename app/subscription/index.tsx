@@ -15,7 +15,8 @@ import { getPlans, Plan } from "../services/subscription";
 import { createPayFastPayment } from "../services/payment";
 import { useSubscription } from "../context/SubscriptionContext";
 
-const COLORS = ["#6B7280", "#6C63FF", "#F59E0B", "#10B981", "#EF4444"];
+// Softer, more contemporary accent palette
+const COLORS = ["#64748B", "#7C6FFF", "#F5A524", "#12B76A", "#F04438"];
 
 function buildFeatures(plan: Plan): string[] {
   const features: string[] = [];
@@ -84,10 +85,14 @@ export default function SubscriptionScreen() {
         params: { paymentUrl: result.payment_url },
       });
 
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Upgrade error:", error);
+      console.error("Error response:", error?.response?.data);
+      console.error("Error status:", error?.response?.status);
+
       Alert.alert(
         "Error",
-        "Could not start checkout. Please try again."
+        error?.response?.data?.message || error?.message || "Could not start checkout. Please try again."
       );
     } finally {
       setSubscribingId(null);
@@ -97,128 +102,228 @@ export default function SubscriptionScreen() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" color="#6C63FF" />
+        <ActivityIndicator size="large" color="#7C6FFF" />
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Ionicons name="diamond" size={50} color="white" />
-          <Text style={styles.title}>EduApp Premium</Text>
+          <View style={styles.iconBadge}>
+            <Ionicons name="diamond" size={34} color="#7C6FFF" />
+          </View>
+          <Text style={styles.title}>uThando Lwemfundo Premium</Text>
           <Text style={styles.subtitle}>
             Unlock your full learning experience
           </Text>
         </View>
 
-        {plans.map((plan, index) => {
-          const color = COLORS[index % COLORS.length];
-          const isCurrentPlan = subscription?.plan_id === plan.id;
-          const isFree = Number(plan.price) === 0;
-          const isSubscribing = subscribingId === plan.id;
+        <View style={styles.cardsWrap}>
+          {plans.map((plan, index) => {
+            const color = COLORS[index % COLORS.length];
+            const isCurrentPlan = subscription?.plan_id === plan.id;
+            const isFree = Number(plan.price) === 0;
+            const isSubscribing = subscribingId === plan.id;
 
-          return (
-            <View key={plan.id} style={styles.card}>
-              {plan.ai_tutor_enabled && (
-                <View style={[styles.badge, { backgroundColor: color }]}>
-                  <Text style={styles.badgeText}>BEST VALUE</Text>
-                </View>
-              )}
-
-              <Text style={styles.planName}>{plan.name}</Text>
-
-              <Text style={[styles.price, { color }]}>
-                {isFree ? "R0" : `R${plan.price} / month`}
-              </Text>
-
-              <View style={{ marginTop: 15 }}>
-                {buildFeatures(plan).map((feature, i) => (
-                  <View key={i} style={styles.featureRow}>
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={20}
-                      color="#22C55E"
-                    />
-                    <Text style={styles.featureText}>{feature}</Text>
-                  </View>
-                ))}
-              </View>
-
-              <TouchableOpacity
-                disabled={isCurrentPlan || isFree || isSubscribing}
-                onPress={() => handleUpgrade(plan)}
+            return (
+              <View
+                key={plan.id}
                 style={[
-                  styles.button,
-                  {
-                    backgroundColor:
-                      isCurrentPlan || isFree ? "#D1D5DB" : color,
-                  },
+                  styles.card,
+                  plan.ai_tutor_enabled && styles.cardHighlighted,
                 ]}
               >
-                {isSubscribing ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.buttonText}>
-                    {isCurrentPlan
-                      ? "Current Plan"
-                      : isFree
-                      ? "Free Plan"
-                      : "Upgrade"}
-                  </Text>
+                {plan.ai_tutor_enabled && (
+                  <View style={styles.badge}>
+                    <Ionicons name="sparkles" size={12} color="#fff" />
+                    <Text style={styles.badgeText}>BEST VALUE</Text>
+                  </View>
                 )}
-              </TouchableOpacity>
-            </View>
-          );
-        })}
 
-        <Text style={styles.footer}>
-          Secure payments powered by PayFast.
-        </Text>
+                <View style={styles.cardHeaderRow}>
+                  <Text style={styles.planName}>{plan.name}</Text>
+                  <View style={[styles.colorDot, { backgroundColor: color }]} />
+                </View>
+
+                <View style={styles.priceRow}>
+                  <Text style={[styles.price, { color: isFree ? "#111827" : color }]}>
+                    {isFree ? "R0" : `R${plan.price}`}
+                  </Text>
+                  {!isFree && <Text style={styles.pricePeriod}>/ month</Text>}
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.featuresWrap}>
+                  {buildFeatures(plan).map((feature, i) => (
+                    <View key={i} style={styles.featureRow}>
+                      <View style={styles.checkCircle}>
+                        <Ionicons name="checkmark" size={13} color="#12B76A" />
+                      </View>
+                      <Text style={styles.featureText}>{feature}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  disabled={isCurrentPlan || isFree || isSubscribing}
+                  onPress={() => handleUpgrade(plan)}
+                  style={[
+                    styles.button,
+                    {
+                      backgroundColor:
+                        isCurrentPlan || isFree ? "#F1F2F6" : color,
+                    },
+                  ]}
+                >
+                  {isSubscribing ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text
+                      style={[
+                        styles.buttonText,
+                        (isCurrentPlan || isFree) && styles.buttonTextMuted,
+                      ]}
+                    >
+                      {isCurrentPlan
+                        ? "Current Plan"
+                        : isFree
+                        ? "Free Plan"
+                        : "Upgrade"}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            );
+          })}
+        </View>
+
+        <View style={styles.footerRow}>
+          <Ionicons name="shield-checkmark-outline" size={14} color="#9CA3AF" />
+          <Text style={styles.footer}>Secure payments powered by PayFast</Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F4F6FA" },
+  container: { flex: 1, backgroundColor: "#F7F8FC" },
   center: { justifyContent: "center", alignItems: "center" },
+  scrollContent: { paddingBottom: 30 },
+
   header: {
-    backgroundColor: "#4F46E5",
-    paddingVertical: 40,
     alignItems: "center",
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    paddingTop: 36,
+    paddingBottom: 28,
   },
-  title: { color: "#fff", fontSize: 28, fontWeight: "700", marginTop: 10 },
-  subtitle: { color: "#E5E7EB", marginTop: 8, fontSize: 16 },
+  iconBadge: {
+    width: 68,
+    height: 68,
+    borderRadius: 20,
+    backgroundColor: "#EFEDFF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
+  },
+  title: {
+    color: "#111827",
+    fontSize: 20,
+    fontWeight: "700",
+    letterSpacing: 0.2,
+    textAlign: "center",
+  },
+  subtitle: {
+    color: "#6B7280",
+    marginTop: 6,
+    fontSize: 14,
+  },
+
+  cardsWrap: {
+    paddingHorizontal: 18,
+    gap: 16,
+  },
   card: {
     backgroundColor: "#fff",
-    marginHorizontal: 18,
-    marginTop: 22,
-    borderRadius: 18,
-    padding: 20,
-    elevation: 4,
+    borderRadius: 22,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: "#EEF0F5",
+    shadowColor: "#1E1B4B",
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 2,
   },
+  cardHighlighted: {
+    borderColor: "#7C6FFF",
+    borderWidth: 1.5,
+    shadowOpacity: 0.1,
+  },
+
   badge: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    position: "absolute",
+    top: -12,
+    left: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "#7C6FFF",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 20,
-    marginBottom: 12,
   },
-  badgeText: { color: "white", fontWeight: "700", fontSize: 12 },
-  planName: { fontSize: 24, fontWeight: "700" },
-  price: { fontSize: 30, fontWeight: "800", marginTop: 10 },
-  featureRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  featureText: { marginLeft: 10, fontSize: 15, color: "#374151" },
+  badgeText: { color: "#fff", fontWeight: "700", fontSize: 11, letterSpacing: 0.4 },
+
+  cardHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  planName: { fontSize: 19, fontWeight: "700", color: "#111827" },
+  colorDot: { width: 10, height: 10, borderRadius: 5 },
+
+  priceRow: { flexDirection: "row", alignItems: "flex-end", marginTop: 12 },
+  price: { fontSize: 32, fontWeight: "800" },
+  pricePeriod: { fontSize: 14, color: "#9CA3AF", marginLeft: 4, marginBottom: 5 },
+
+  divider: {
+    height: 1,
+    backgroundColor: "#F1F2F6",
+    marginVertical: 16,
+  },
+
+  featuresWrap: { gap: 11 },
+  featureRow: { flexDirection: "row", alignItems: "center" },
+  checkCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "#ECFDF5",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
+  featureText: { fontSize: 14.5, color: "#374151", fontWeight: "500" },
+
   button: {
-    marginTop: 20,
-    borderRadius: 12,
+    marginTop: 22,
+    borderRadius: 14,
     paddingVertical: 15,
     alignItems: "center",
   },
-  buttonText: { color: "white", fontWeight: "700", fontSize: 16 },
-  footer: { textAlign: "center", marginVertical: 25, color: "#6B7280", fontSize: 13 },
+  buttonText: { color: "#fff", fontWeight: "700", fontSize: 15.5 },
+  buttonTextMuted: { color: "#9CA3AF" },
+
+  footerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 28,
+  },
+  footer: { color: "#9CA3AF", fontSize: 12.5 },
 });

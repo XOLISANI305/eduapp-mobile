@@ -82,7 +82,7 @@ export default function PremiumGuard({
       </Text>
 
       <Text style={styles.description}>
-        Upgrade your EduApp subscription
+        Upgrade your uThando Lwemfundo subscription
         to unlock this feature.
       </Text>
 

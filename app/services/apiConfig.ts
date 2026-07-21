@@ -3,7 +3,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ------------------------ BASE API ------------------------
-const API_URL = "http://10.42.4.19:5000/api";
+const API_URL = "https://eduapp-backend-1.onrender.com/api";
 
 export const api = axios.create({
   baseURL: API_URL,
