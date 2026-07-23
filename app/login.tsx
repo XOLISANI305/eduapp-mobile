@@ -13,7 +13,7 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
@@ -56,11 +56,18 @@ export default function LoginScreen() {
   const [showRolePicker, setShowRolePicker] = useState(false);
   const [selectedRole, setSelectedRole] = useState("");
   const [roleLoading, setRoleLoading] = useState(false);
+  const passwordRef = useRef<TextInput>(null);
 
   // ------------------------------
   // Role-based redirect
   // ------------------------------
-  const redirectByRole = (role?: string) => {
+const redirectByRole = (role?: string) => {
+    try {
+      router.dismissAll(); // clear any stacked screens/modals before switching roles
+    } catch (e) {
+      // dismissAll can throw if there's nothing to dismiss — safe to ignore
+    }
+
     switch (role) {
       case "admin":
         router.replace("/Dashboards/AdminDashboard");
@@ -194,48 +201,54 @@ export default function LoginScreen() {
   // ------------------------------
   // Biometric Login
   // ------------------------------
-  const handleBiometricLogin = async () => {
-    setErrorMessage("");
+const handleBiometricLogin = async () => {
+  setErrorMessage("");
 
-    try {
-      const token = await SecureStore.getItemAsync(SECURE_TOKEN_KEY);
-      const userStr = await SecureStore.getItemAsync(SECURE_USER_KEY);
+  try {
+    const token = await SecureStore.getItemAsync(SECURE_TOKEN_KEY);
+    const userStr = await SecureStore.getItemAsync(SECURE_USER_KEY);
 
-      if (!token || !userStr) {
-        setErrorMessage("No saved login found. Please sign in manually first.");
-        return;
-      }
-
-      const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: "Login with Fingerprint",
-        fallbackLabel: "Use password",
-      });
-
-      if (!result.success) {
-        setErrorMessage("Authentication cancelled or failed. Please try again.");
-        return;
-      }
-
-      // Verify the stored token is still valid before letting the user in
-      setAuthToken(token);
-      try {
-        const response = await api.get("/auth/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const user = response.data;
-        await SecureStore.setItemAsync(SECURE_USER_KEY, JSON.stringify(user));
-        redirectByRole(user.role);
-      } catch (verifyErr) {
-        // Token expired or invalid — clear it and force manual login
-        await SecureStore.deleteItemAsync(SECURE_TOKEN_KEY);
-        await SecureStore.deleteItemAsync(SECURE_USER_KEY);
-        setAuthToken(undefined);
-        setErrorMessage("Your session has expired. Please sign in with your password.");
-      }
-    } catch {
-      setErrorMessage("Biometric login error. Please try again.");
+    if (!token || !userStr) {
+      setErrorMessage("No saved login found. Please sign in manually first.");
+      return;
     }
-  };
+
+    const savedUser = JSON.parse(userStr);
+
+    // Guard: the saved biometric session must match the email typed in the form
+    if (email.trim().toLowerCase() !== savedUser.email?.trim().toLowerCase()) {
+      setErrorMessage("Fingerprint login is only available for the account you last signed in with. Please enter your password.");
+      return;
+    }
+
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: "Login with Fingerprint",
+      fallbackLabel: "Use password",
+    });
+
+    if (!result.success) {
+      setErrorMessage("Authentication cancelled or failed. Please try again.");
+      return;
+    }
+
+    setAuthToken(token);
+    try {
+      const response = await api.get("/auth/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const user = response.data;
+      await SecureStore.setItemAsync(SECURE_USER_KEY, JSON.stringify(user));
+      redirectByRole(user.role);
+    } catch (verifyErr) {
+      await SecureStore.deleteItemAsync(SECURE_TOKEN_KEY);
+      await SecureStore.deleteItemAsync(SECURE_USER_KEY);
+      setAuthToken(undefined);
+      setErrorMessage("Your session has expired. Please sign in with your password.");
+    }
+  } catch {
+    setErrorMessage("Biometric login error. Please try again.");
+  }
+};
 
   // ------------------------------
   // Google OAuth
@@ -320,7 +333,10 @@ export default function LoginScreen() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <ScrollView contentContainerStyle={styles.container}>
+     <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
         <Image source={logo} style={styles.logo} />
 
         <Text style={styles.title}>Welcome Back</Text>
@@ -337,19 +353,25 @@ export default function LoginScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
             style={styles.input}
+            returnKeyType="next"
+            onSubmitEditing={() => passwordRef.current?.focus()}
+            blurOnSubmit={false}
           />
         </View>
 
         {/* Password */}
-        <View style={styles.inputWrapper}>
+    <View style={styles.inputWrapper}>
           <Feather name="lock" size={18} color="rgba(255,255,255,0.8)" />
           <TextInput
+            ref={passwordRef}
             placeholder="Password"
             placeholderTextColor="rgba(255,255,255,0.7)"
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!showPassword}
             style={styles.input}
+            returnKeyType="done"
+            onSubmitEditing={handleLogin}
           />
           <Feather
             name={showPassword ? "eye-off" : "eye"}

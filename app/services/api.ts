@@ -1,5 +1,7 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
+import { router } from "expo-router";
 
 const API_URL = "https://eduapp-backend-1.onrender.com/api";
 
@@ -26,18 +28,45 @@ export const setAuthToken = async (token?: string) => {
   }
 };
 
+// Fully clears every stored session key, in both storage systems
+const forceLogout = async () => {
+  await AsyncStorage.removeItem("token");
+  await AsyncStorage.removeItem("user");
+  await AsyncStorage.removeItem("authToken");
+  await AsyncStorage.removeItem("user");
+
+  await SecureStore.deleteItemAsync("authToken");
+  await SecureStore.deleteItemAsync("authUser");
+  await SecureStore.deleteItemAsync("biometricEnabled");
+
+  delete api.defaults.headers.common["Authorization"];
+
+  console.log("Session expired — logging out user");
+
+  try {
+    router.replace("/login" as any);
+  } catch (e) {
+    // router may not be ready yet during app startup — safe to ignore
+  }
+};
+
+let loggingOut = false;
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      await AsyncStorage.removeItem("token");
-      console.log("Logging out user");
+      // Guard against multiple simultaneous 401s triggering repeat logouts
+      if (!loggingOut) {
+        loggingOut = true;
+        await forceLogout();
+        setTimeout(() => { loggingOut = false; }, 1000);
+      }
       return Promise.reject(new Error("Session expired. Please login again."));
     }
     return Promise.reject(error);
   }
 );
-
 
 export const getErrorMessage = (err: unknown): string => {
   if (typeof err === "object" && err !== null && "response" in err) {
@@ -833,20 +862,24 @@ case 401:
 export const logoutUser = async (): Promise<void> => {
   try {
     console.log('Logging out user');
-    
-    // Remove token from axios headers
+
     setAuthToken();
-    
-    // Clear stored data
+
+    // Clear AsyncStorage (non-sensitive)
     await AsyncStorage.removeItem('authToken');
     await AsyncStorage.removeItem('user');
-    
+
+    // Clear SecureStore (sensitive session + biometric preference)
+    await SecureStore.deleteItemAsync('authToken');
+    await SecureStore.deleteItemAsync('authUser');
+    await SecureStore.deleteItemAsync('biometricEnabled');
+
     console.log('Logout completed successfully');
   } catch (error: any) {
     console.error('Logout error:', error);
-    // Don't throw error during logout - just ensure cleanup
   }
 };
+
 export const getCurrentUser = async (): Promise<User> => {
   try {
     console.log('Getting current user');

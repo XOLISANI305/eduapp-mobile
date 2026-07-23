@@ -10,7 +10,7 @@
       "android",
       "web"
     ],
-    "icon": "./assets/images/playstore-icon.png",
+    "icon": "./assets/images/playstoreicon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -22,7 +22,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/playstore-icono.png",
+        "foregroundImage": "./assets/images/UthandoLogo.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -31,14 +31,14 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/playstore-icon.png"
+      "favicon": "./assets/images/UthandoLogo.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/playstore-icon.png",
+          "image": "./assets/images/playstoreicon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"

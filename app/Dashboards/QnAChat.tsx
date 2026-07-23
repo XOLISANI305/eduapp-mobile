@@ -460,10 +460,11 @@ export default function QnAChat() {
         </TouchableOpacity>
       </View>
 
-      <KeyboardAvoidingView 
-        style={{ flex: 1 }} 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+       <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+    >
         <View style={styles.content}>
           {/* Search Bar */}
           <View style={styles.searchContainer}>

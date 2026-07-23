@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Stack, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { SubscriptionProvider } from "./context/SubscriptionContext";
 import {
   setupPushNotifications,
@@ -13,7 +14,6 @@ export default function RootLayout() {
   const responseListener = useRef<Notifications.EventSubscription | undefined>(undefined);
 
   useEffect(() => {
-    // Register this device for push once we know who's logged in
     (async () => {
       const userData = await AsyncStorage.getItem("user");
       if (userData) {
@@ -23,7 +23,6 @@ export default function RootLayout() {
       }
     })();
 
-    // Handle tapping a notification -> jump straight into that subject's Q&A chat
     responseListener.current = addNotificationResponseListener((subjectId) => {
       router.push({
         pathname: "/Dashboards/QnAChat",
@@ -37,29 +36,31 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <SubscriptionProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="home" />
-        <Stack.Screen name="onboarding1" />
-        <Stack.Screen name="onboarding2" />
-        <Stack.Screen name="onboarding3" />
-        <Stack.Screen name="login" />
-        <Stack.Screen name="register" />
-        <Stack.Screen name="dashboard" />
-        <Stack.Screen name="profile" />
-        <Stack.Screen name="settings" />
-        <Stack.Screen name="subjects" />
-        <Stack.Screen name="topics" />
-        <Stack.Screen name="assessments" />
-        <Stack.Screen name="leaderboard" />
-        <Stack.Screen name="chats" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="screens" />
-        <Stack.Screen name="subject-details" />
-        <Stack.Screen name="subscription" />
-        <Stack.Screen name="checkout" />
-      </Stack>
-    </SubscriptionProvider>
+    <SafeAreaProvider>
+      <SubscriptionProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="home" />
+          <Stack.Screen name="onboarding1" />
+          <Stack.Screen name="onboarding2" />
+          <Stack.Screen name="onboarding3" />
+          <Stack.Screen name="login" />
+          <Stack.Screen name="register" />
+          <Stack.Screen name="dashboard" />
+          <Stack.Screen name="profile" />
+          <Stack.Screen name="settings" />
+          <Stack.Screen name="subjects" />
+          <Stack.Screen name="topics" />
+          <Stack.Screen name="assessments" />
+          <Stack.Screen name="leaderboard" />
+          <Stack.Screen name="chats" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="screens" />
+          <Stack.Screen name="subject-details" />
+          <Stack.Screen name="subscription" />
+          <Stack.Screen name="checkout" />
+        </Stack>
+      </SubscriptionProvider>
+    </SafeAreaProvider>
   );
 }

@@ -20,6 +20,8 @@ import { getCurrentUser, User, handleApiError } from "./services/api";
 import { goBack } from "expo-router/build/global-state/routing";
 import { useFocusEffect } from "expo-router";
 import { useCallback } from "react";
+import * as SecureStore from "expo-secure-store";
+
 
 type FeatherIconName = React.ComponentProps<typeof Feather>['name'];
 
@@ -72,28 +74,33 @@ useFocusEffect(
     setRefreshing(false);
   };
 
-  const handleLogout = async () => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to logout?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Logout",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await AsyncStorage.removeItem("user");
-              await AsyncStorage.removeItem("token");
-              router.replace("/login" as any);
-            } catch (error) {
-              console.error("Logout error:", error);
-            }
-          },
+ const handleLogout = async () => {
+  Alert.alert(
+    "Logout",
+    "Are you sure you want to logout?",
+    [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await AsyncStorage.removeItem("user");
+            await AsyncStorage.removeItem("token");
+
+            await SecureStore.deleteItemAsync("authToken");
+            await SecureStore.deleteItemAsync("authUser");
+            await SecureStore.deleteItemAsync("biometricEnabled");
+
+            router.replace("/login" as any);
+          } catch (error) {
+            console.error("Logout error:", error);
+          }
         },
-      ]
-    );
-  };
+      },
+    ]
+  );
+};
 
   const handleSettingToggle = (setting: keyof typeof settings) => {
     setSettings(prev => ({

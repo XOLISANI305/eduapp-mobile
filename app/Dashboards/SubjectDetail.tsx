@@ -147,10 +147,10 @@ export default function SubjectDetail() {
         // file_path is already a complete URL (e.g. Cloudinary) — use as-is
         fileUrl = resource.file_path;
       } else {
-        // file_path is a relative path on your own server — build the full URL
-        const clean = resource.file_path.replace(/\\/g, '/').replace('uploads/', '');
-        fileUrl = `http://10.3.22.56:5000/uploads/${clean}`;
-      }
+  // file_path is a relative path on your own server — build the full URL
+  const clean = resource.file_path.replace(/\\/g, '/').replace('uploads/', '');
+  fileUrl = `https://eduapp-backend-1.onrender.com/uploads/${clean}`;
+}
     }
 
     if (!fileUrl) {

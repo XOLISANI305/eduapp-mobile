@@ -394,67 +394,75 @@ export default function AdminDashboard() {
     }
   };
 
-  const loadData = async () => {
-    try {
-      console.log('Loading subjects...');
-      const subjectsData = await getSubjects();
-      console.log('Subjects loaded:', subjectsData?.length);
-      
-      if (!Array.isArray(subjectsData)) {
-        console.warn('Subjects data is not an array:', subjectsData);
-        setSubjects([]);
-        return;
-      }
+const loadData = async () => {
+  try {
+    console.log('Loading subjects...');
+    const subjectsData = await getSubjects();
+    console.log('Subjects loaded:', subjectsData?.length);
 
-      setSubjects(subjectsData);
+    if (!Array.isArray(subjectsData)) {
+      console.warn('Subjects data is not an array:', subjectsData);
+      setSubjects([]);
+      return;
+    }
 
-      const topicsData: Record<string, Topic[]> = {};
-      const groupsData: Record<string, Group[]> = {};
-      const assessmentsData: Record<string, Assessment[]> = {};
-      const resourcesData: Record<string, Resource[]> = {};
+    setSubjects(subjectsData);
 
-      for (const subject of subjectsData) {
-        if (!subject?.id) continue;
+    const topicsData: Record<string, Topic[]> = {};
+    const groupsData: Record<string, Group[]> = {};
+    const assessmentsData: Record<string, Assessment[]> = {};
+    const resourcesData: Record<string, Resource[]> = {};
+
+    // Run all subjects in parallel instead of one at a time
+    await Promise.all(
+      subjectsData.map(async (subject) => {
+        if (!subject?.id) return;
         const subjectId = String(subject.id);
 
         try {
-          const subjectTopics = await getTopicsBySubject(subjectId);
+          // Fetch topics, groups, and assessments for this subject in parallel
+          const [subjectTopics, subjectGroups, subjectAssessments] = await Promise.all([
+            getTopicsBySubject(subjectId),
+            getGroupsBySubject(subjectId),
+            getAssessmentsBySubject(subjectId),
+          ]);
+
           topicsData[subjectId] = Array.isArray(subjectTopics) ? subjectTopics : [];
-
-          const subjectGroups = await getGroupsBySubject(subjectId);
           groupsData[subjectId] = Array.isArray(subjectGroups) ? subjectGroups : [];
-
-          const subjectAssessments = await getAssessmentsBySubject(subjectId);
           assessmentsData[subjectId] = Array.isArray(subjectAssessments) ? subjectAssessments : [];
 
-          for (const topic of topicsData[subjectId]) {
-            if (!topic?.id) continue;
-            const topicId = String(topic.id);
-            try {
-              const topicResources = await getResourcesByTopic(topicId);
-              resourcesData[topicId] = Array.isArray(topicResources) ? topicResources : [];
-            } catch (err) {
-              console.error(`Failed to load resources for topic ${topicId}:`, err);
-              resourcesData[topicId] = [];
-            }
-          }
+          // Fetch resources for all topics in this subject in parallel too
+          await Promise.all(
+            topicsData[subjectId].map(async (topic) => {
+              if (!topic?.id) return;
+              const topicId = String(topic.id);
+              try {
+                const topicResources = await getResourcesByTopic(topicId);
+                resourcesData[topicId] = Array.isArray(topicResources) ? topicResources : [];
+              } catch (err) {
+                console.error(`Failed to load resources for topic ${topicId}:`, err);
+                resourcesData[topicId] = [];
+              }
+            })
+          );
         } catch (err) {
           console.error(`Failed to load data for subject ${subjectId}:`, err);
           topicsData[subjectId] = [];
           groupsData[subjectId] = [];
           assessmentsData[subjectId] = [];
         }
-      }
+      })
+    );
 
-      setTopics(topicsData);
-      setGroups(groupsData);
-      setAssessments(assessmentsData);
-      setResources(resourcesData);
-    } catch (error) {
-      console.error('Load data error:', error);
-      Alert.alert('Error', getErrorMessage(error));
-    }
-  };
+    setTopics(topicsData);
+    setGroups(groupsData);
+    setAssessments(assessmentsData);
+    setResources(resourcesData);
+  } catch (error) {
+    console.error('Load data error:', error);
+    Alert.alert('Error', getErrorMessage(error));
+  }
+};
 
   const onRefresh = async () => {
     setRefreshing(true);

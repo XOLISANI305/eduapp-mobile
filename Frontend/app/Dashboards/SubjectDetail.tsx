@@ -135,7 +135,7 @@ export default function SubjectDetail() {
       let fileUrl = resource.url;
       if (!fileUrl && resource.file_path) {
         const clean = resource.file_path.replace(/\\/g, '/').replace('uploads/', '');
-        fileUrl = `http://10.3.22.56:5000/uploads/${clean}`;
+        fileUrl = `https://eduapp-backend-1.onrender.com/uploads/${clean}`;
       }
 
       if (!fileUrl) {
@@ -153,7 +153,6 @@ export default function SubjectDetail() {
       Alert.alert('Error', 'Failed to open resource');
     }
   };
-
   // ─── Data loading ────────────────────────────────────────────────────────────
 
   const loadSubjectDetails = async () => {
